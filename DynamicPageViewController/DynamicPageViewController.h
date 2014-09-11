@@ -27,10 +27,10 @@
 @interface DynamicPageViewController : UIPageViewController<UIPageViewControllerDataSource,UIPageViewControllerDelegate>
 
 // All the content view controllers must adopt IdentifiableContent protocol
-@property (nonatomic)NSMutableArray*classNamesList;
-@property (nonatomic)NSMutableArray*storyBoardIdsList;
-@property (nonatomic)NSMutableArray*sequenceInstanceIdentifier;
 
+@property (nonatomic)NSMutableArray*classNamesList;             // You can resolve from class
+@property (nonatomic)NSMutableArray*storyBoardIdsList;          // Or use a storyboard based sequence
+@property (nonatomic)NSMutableArray*sequenceInstanceIdentifier; // In both case you must set an identifier for each item.
 - (void)configure:(UIViewController<IdentifiableContent>*)contentViewController atIndex:(NSUInteger)index;
 
 #pragma Mark - Programmatic navigation

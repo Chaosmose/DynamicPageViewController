@@ -34,43 +34,60 @@
     self.classNamesList=[NSMutableArray array];
     self.storyBoardIdsList=[NSMutableArray array];
     self.sequenceInstanceIdentifier=[NSMutableArray array];
+    self.delegate=self;
+    self.dataSource=self;
 }
 
 - (void)viewWillAppear:(BOOL)animated{
     [super viewWillAppear:animated];
-    if([self.classNamesList count]!=[self.sequenceInstanceIdentifier count]){
-        [NSException raise:@"DynamicPageViewController" format:@"[self.classNamesList count]==[self.sequenceInstanceIdentifier count]"];
-    }
-    self.delegate=self;
-    self.dataSource=self;
 }
 
 #pragma Mark - UIPageViewControllerDataSource
 
 - (UIViewController *)pageViewController:(UIPageViewController *)pageViewController viewControllerBeforeViewController:(UIViewController *)viewController{
-    NSString*className=NSStringFromClass([viewController class]);
-    NSUInteger idx=[_classNamesList indexOfObject:className];
+    NSUInteger idx=[self _indexOfViewController:(UIViewController<IdentifiableContent>*)viewController];
     if(idx==NSNotFound || idx==0){
         return nil;
     }
-    UIViewController<IdentifiableContent>*contentViewController=[self.storyboard instantiateViewControllerWithIdentifier:[_storyBoardIdsList objectAtIndex:idx-1]];
-    [self configure:contentViewController atIndex:idx-1];
-    return contentViewController;
+    return [self _contentViewControllerAtIndex:idx-1];
 }
+
+
 - (UIViewController *)pageViewController:(UIPageViewController *)pageViewController viewControllerAfterViewController:(UIViewController *)viewController{
-    NSString*className=NSStringFromClass([viewController class]);
-    NSUInteger idx=[_classNamesList indexOfObject:className];
-    if(idx==NSNotFound || (idx==[_classNamesList count]-1)){
+    NSUInteger idx=[self _indexOfViewController:(UIViewController<IdentifiableContent>*)viewController];
+    if(idx==NSNotFound || (idx>[_sequenceInstanceIdentifier count]-2)){
         return nil;
     }
-    UIViewController<IdentifiableContent>*contentViewController=[self.storyboard instantiateViewControllerWithIdentifier:[_storyBoardIdsList objectAtIndex:idx+1]];
-    [self configure:contentViewController atIndex:idx+1];
+    return [self _contentViewControllerAtIndex:idx+1];
+}
+
+-(UIViewController<IdentifiableContent>*)_contentViewControllerAtIndex:(NSUInteger)index{
+    UIViewController<IdentifiableContent>*contentViewController=nil;
+    if([self _useStoryBoard]){
+        contentViewController=[self.storyboard instantiateViewControllerWithIdentifier:[_storyBoardIdsList objectAtIndex:index]];
+    }else{
+        Class currentClass=NSClassFromString([_classNamesList objectAtIndex:index]);
+        contentViewController=[[currentClass alloc] init];
+    }
+    [self configure:contentViewController atIndex:index];
     return contentViewController;
 }
+
+- (BOOL)_useStoryBoard{
+    return ([_storyBoardIdsList count]>[_classNamesList count]);
+}
+
+- (NSUInteger)_indexOfViewController:(UIViewController<IdentifiableContent>*)viewController{
+    UIViewController<IdentifiableContent>*casted=(UIViewController<IdentifiableContent>*)viewController;
+    NSString *identifier=[casted indexIdentifier];
+    NSUInteger idx=[_sequenceInstanceIdentifier indexOfObject:identifier];
+    return idx;
+}
+
 
 
 - (NSInteger)presentationCountForPageViewController:(UIPageViewController *)pageViewController {
-    return [_classNamesList count];
+    return [_sequenceInstanceIdentifier count];
 }
 
 - (NSInteger)presentationIndexForPageViewController:(UIPageViewController *)pageViewController {
@@ -85,7 +102,8 @@
 
 - (void)configure:(UIViewController<IdentifiableContent>*)contentViewController atIndex:(NSUInteger)index{
     if(![contentViewController conformsToProtocol:@protocol(IdentifiableContent)]){
-        [NSException raise:@"DynamicPageViewController" format:@"contentViewController %@ must conform to IndexableInASequence",NSStringFromClass([contentViewController class])];
+        [NSException raise:@"DynamicPageViewController"
+                    format:@"contentViewController %@ must conform to IdentifiableContent",NSStringFromClass([contentViewController class])];
     }
     // We set up the identifier
     [contentViewController setIndexIdentifier:[self.sequenceInstanceIdentifier objectAtIndex:index]];
@@ -95,27 +113,29 @@
     DynamicPageViewController *__weak weakSelf=self;
     dispatch_async(dispatch_get_main_queue(), ^{
         UIViewController*target=[weakSelf pageViewController:weakSelf viewControllerAfterViewController:[weakSelf _currentViewController]];
-        [weakSelf setViewControllers:@[target]
-                           direction:UIPageViewControllerNavigationDirectionForward
-                            animated:YES
-                      completion:^(BOOL finished) {
-                          }];
+        if(target){
+            [weakSelf setViewControllers:@[target]
+                               direction:UIPageViewControllerNavigationDirectionForward
+                                animated:YES
+                              completion:^(BOOL finished) {
+                              }];
+        }
     });
-
+    
     
     
 }
 - (void)previousPage{
-    UIViewController*target=[self pageViewController:self viewControllerBeforeViewController:[self _currentViewController]];
-    [self setViewControllers:@[target] direction:UIPageViewControllerNavigationDirectionForward animated:YES
-                  completion:^(BOOL finished) {
-                      
-                  }];
-}
-
-
-- (void)goToPage:(NSInteger)pageIndex{
-    
+    DynamicPageViewController *__weak weakSelf=self;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        UIViewController*target=[weakSelf pageViewController:weakSelf viewControllerBeforeViewController:[weakSelf _currentViewController]];
+        if(target){
+            [weakSelf setViewControllers:@[target] direction:UIPageViewControllerNavigationDirectionForward animated:YES
+                              completion:^(BOOL finished) {
+                                  
+                              }];
+        }
+    });
 }
 
 - (UIViewController<IdentifiableContent>*)_currentViewController{
@@ -126,7 +146,7 @@
 }
 
 
-#pragma  mark - 
+#pragma  mark -
 
 -(BOOL)shouldAutorotate {
     return YES;
