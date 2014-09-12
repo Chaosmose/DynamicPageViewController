@@ -38,4 +38,9 @@
 - (void)nextPage;
 - (void)previousPage;
 
+#pragma Mark - CurrentIndex
+
+- (void)indexHasChangedTo:(NSUInteger)index;
+
+
 @end

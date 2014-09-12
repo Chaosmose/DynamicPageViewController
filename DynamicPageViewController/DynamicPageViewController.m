@@ -85,7 +85,6 @@
 }
 
 
-
 - (NSInteger)presentationCountForPageViewController:(UIPageViewController *)pageViewController {
     return [_sequenceInstanceIdentifier count];
 }
@@ -96,6 +95,15 @@
     if(currentVc)
         return [self.sequenceInstanceIdentifier indexOfObject:currentVc.indexIdentifier];
     return 0;
+}
+
+#pragma mark - UIPageViewControllerDelegate
+
+- (void)pageViewController:(UIPageViewController *)pageViewController didFinishAnimating:(BOOL)finished previousViewControllers:(NSArray *)previousViewControllers transitionCompleted:(BOOL)completed{
+    NSString*identifier=[self _currentViewController].indexIdentifier;
+    NSUInteger idx=[_sequenceInstanceIdentifier indexOfObject:identifier];
+    [self indexHasChangedTo:idx];
+    
 }
 
 #pragma mark -
@@ -132,10 +140,13 @@
         if(target){
             [weakSelf setViewControllers:@[target] direction:UIPageViewControllerNavigationDirectionForward animated:YES
                               completion:^(BOOL finished) {
-                                  
                               }];
         }
     });
+}
+
+- (void)indexHasChangedTo:(NSUInteger)index{
+    
 }
 
 - (UIViewController<IdentifiableContent>*)_currentViewController{
