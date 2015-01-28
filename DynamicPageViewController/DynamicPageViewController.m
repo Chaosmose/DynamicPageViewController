@@ -100,10 +100,7 @@
 #pragma mark - UIPageViewControllerDelegate
 
 - (void)pageViewController:(UIPageViewController *)pageViewController didFinishAnimating:(BOOL)finished previousViewControllers:(NSArray *)previousViewControllers transitionCompleted:(BOOL)completed{
-    NSString*identifier=[self _currentViewController].indexIdentifier;
-    NSUInteger idx=[_sequenceInstanceIdentifier indexOfObject:identifier];
-    [self indexHasChangedTo:idx];
-    
+    [self _changeIndexFor:[self _currentViewController]];
 }
 
 #pragma mark -
@@ -120,12 +117,13 @@
 - (void)nextPage{
     DynamicPageViewController *__weak weakSelf=self;
     dispatch_async(dispatch_get_main_queue(), ^{
-        UIViewController*target=[weakSelf pageViewController:weakSelf viewControllerAfterViewController:[weakSelf _currentViewController]];
+        UIViewController<IdentifiableContent>*target=(UIViewController<IdentifiableContent>*)[weakSelf pageViewController:weakSelf viewControllerAfterViewController:[weakSelf _currentViewController]];
         if(target){
             [weakSelf setViewControllers:@[target]
                                direction:UIPageViewControllerNavigationDirectionForward
                                 animated:YES
                               completion:^(BOOL finished) {
+                                  [weakSelf _changeIndexFor:target];
                               }];
         }
     });
@@ -136,13 +134,20 @@
 - (void)previousPage{
     DynamicPageViewController *__weak weakSelf=self;
     dispatch_async(dispatch_get_main_queue(), ^{
-        UIViewController*target=[weakSelf pageViewController:weakSelf viewControllerBeforeViewController:[weakSelf _currentViewController]];
+        UIViewController<IdentifiableContent>*target=(UIViewController<IdentifiableContent>*)[weakSelf pageViewController:weakSelf viewControllerBeforeViewController:[weakSelf _currentViewController]];
         if(target){
             [weakSelf setViewControllers:@[target] direction:UIPageViewControllerNavigationDirectionForward animated:YES
                               completion:^(BOOL finished) {
+                                  [weakSelf _changeIndexFor:target];
                               }];
         }
     });
+}
+
+- (void)_changeIndexFor:(UIViewController<IdentifiableContent>*)viewController{
+    NSString*identifier=viewController.indexIdentifier;
+    NSUInteger idx=[_sequenceInstanceIdentifier indexOfObject:identifier];
+    [self indexHasChangedTo:idx];
 }
 
 - (void)indexHasChangedTo:(NSUInteger)index{
