@@ -29,8 +29,10 @@
 
 @implementation DynamicPageViewController
 
+
 - (void)viewDidLoad{
     [super viewDidLoad];
+    self.showPageCounter=YES;
     self.classNamesList=[NSMutableArray array];
     self.storyBoardIdsList=[NSMutableArray array];
     self.sequenceInstanceIdentifier=[NSMutableArray array];
@@ -86,15 +88,23 @@
 
 
 - (NSInteger)presentationCountForPageViewController:(UIPageViewController *)pageViewController {
+    if(!showPageCounter){
+        return 0
+    }
     return [_sequenceInstanceIdentifier count];
+  
 }
 
 - (NSInteger)presentationIndexForPageViewController:(UIPageViewController *)pageViewController {
+    if(!showPageCounter){
+        return 0
+    }
     UIViewController<IdentifiableContent>*currentVc=[self _currentViewController];
     // We do return the index of the current view controller.
-    if(currentVc)
+    if(currentVc){
         return [self.sequenceInstanceIdentifier indexOfObject:currentVc.indexIdentifier];
-    return 0;
+    }
+
 }
 
 #pragma mark - UIPageViewControllerDelegate
