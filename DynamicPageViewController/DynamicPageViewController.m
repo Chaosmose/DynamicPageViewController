@@ -48,7 +48,7 @@
 
 - (UIViewController *)pageViewController:(UIPageViewController *)pageViewController viewControllerBeforeViewController:(UIViewController *)viewController{
     NSUInteger idx=[self _indexOfViewController:(UIViewController<IdentifiableContent>*)viewController];
-    if(idx==NSNotFound || idx==0){
+    if(idx==NSNotFound || idx<=0){
         return nil;
     }
     return [self _contentViewControllerAtIndex:idx-1];
@@ -65,13 +65,23 @@
 
 -(UIViewController<IdentifiableContent>*)_contentViewControllerAtIndex:(NSUInteger)index{
     UIViewController<IdentifiableContent>*contentViewController=nil;
-    if([self _useStoryBoard]){
-        contentViewController=[self.storyboard instantiateViewControllerWithIdentifier:[_storyBoardIdsList objectAtIndex:index]];
-    }else{
-        Class currentClass=NSClassFromString([_classNamesList objectAtIndex:index]);
-        contentViewController=[[currentClass alloc] init];
+    if (index<0){
+        return nil;
     }
-    [self configure:contentViewController atIndex:index];
+    if([self _useStoryBoard]){
+        if (index<=[_storyBoardIdsList count]-1){
+            contentViewController=[self.storyboard instantiateViewControllerWithIdentifier:[_storyBoardIdsList objectAtIndex:index]];
+        }
+    }else{
+        if (index<=[_classNamesList count]-1){
+            Class currentClass=NSClassFromString([_classNamesList objectAtIndex:index]);
+            contentViewController=[[currentClass alloc] init];
+        }
+    }
+    if( contentViewController){
+        [self configure:contentViewController
+                atIndex:index];
+    }
     return contentViewController;
 }
 
@@ -92,7 +102,7 @@
         return 0;
     }
     return [_sequenceInstanceIdentifier count];
-  
+    
 }
 
 - (NSInteger)presentationIndexForPageViewController:(UIPageViewController *)pageViewController {
@@ -104,7 +114,7 @@
     if(currentVc){
         return [self.sequenceInstanceIdentifier indexOfObject:currentVc.indexIdentifier];
     }
-
+    
 }
 
 #pragma mark - UIPageViewControllerDelegate
@@ -186,8 +196,6 @@
 - (NSUInteger)supportedInterfaceOrientations{
     return UIInterfaceOrientationMaskAll;
 }
-
-
 
 
 @end
