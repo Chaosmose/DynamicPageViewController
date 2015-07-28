@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name        = 'DynamicPageViewController'
-  s.version     = '1.1'
+  s.version     = '1.2'
   s.authors     = { 'Benoit Pereira da Silva' => 'benoit@pereira-da-silva.com' }
   s.homepage    = 'https://github.com/benoit-pereira-da-silva/DynamicPageViewController'
   s.summary     = 'A dynamic page view controller'

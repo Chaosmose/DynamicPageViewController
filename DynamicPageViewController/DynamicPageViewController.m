@@ -88,16 +88,16 @@
 
 
 - (NSInteger)presentationCountForPageViewController:(UIPageViewController *)pageViewController {
-    if(!showPageCounter){
-        return 0
+    if(!_showPageCounter){
+        return 0;
     }
     return [_sequenceInstanceIdentifier count];
   
 }
 
 - (NSInteger)presentationIndexForPageViewController:(UIPageViewController *)pageViewController {
-    if(!showPageCounter){
-        return 0
+    if(!_showPageCounter){
+        return 0;
     }
     UIViewController<IdentifiableContent>*currentVc=[self _currentViewController];
     // We do return the index of the current view controller.
